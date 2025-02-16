@@ -77,8 +77,6 @@ class Display {
   // Returns the height of the display in pixels.
   int16_t Height();
 
-  // Returns the variant (number of colors) of the display.
-  String Variant();
 
  private:
   // Converts one pixel from input encoding to display color encoding.

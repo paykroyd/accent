@@ -7,7 +7,7 @@
 const uint32_t kSerialSpeed = 115200;
 
 // The GPIO pin used to reset Wifi settings.
-const uint8_t kWifiResetPin = 23;
+const uint8_t kWifiResetPin = 10;
 
 // The base URL for server requests.
 const String kBaseUrl = "https://accent.ink";
@@ -37,8 +37,7 @@ bool downloadImage() {
   // Request the current image from the server.
   if (!network.HttpGet(&http, kEpdEndpoint,
                        {"width", String(display.Width()),
-                        "height", String(display.Height()),
-                        "variant", display.Variant()})) {
+                        "height", String(display.Height())})) {
     return false;
   }
 
