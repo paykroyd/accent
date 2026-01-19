@@ -19,16 +19,21 @@ class Firestore(object):
 
     def __init__(self):
         # Only initialize Firebase once.
-        if not len(firebase_apps):
-            initialize_app(ApplicationDefault(), {
-                'projectId': environ['GOOGLE_CLOUD_PROJECT']
-            })
-        self._db = firestore_client()
+        # if not len(firebase_apps):
+        #     initialize_app(ApplicationDefault(), {
+        #         'projectId': environ['GOOGLE_CLOUD_PROJECT']
+        #     })
+        # self._db = firestore_client()
+        pass
 
     def _api_key(self, service):
         """Retrieves the API key for the specified service."""
 
-        api_key = self._db.collection('api_keys').document(service).get()
+        # api_key = self._db.collection('api_keys').document(service).get()
+        if service == 'google_maps':
+            return 'AIzaSyB-h09_QVyAnL-TM7iwZqOKub7x_WeV1Kk'
+        elif service == 'open_weather':
+            return '928a07954392aaca08e87453cdfef514'
         if not api_key.exists:
             raise DataError('Missing API key for: %s' % service)
 

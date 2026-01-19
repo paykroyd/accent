@@ -12,7 +12,7 @@ from google_calendar import GoogleCalendar
 from graphics import draw_text
 from graphics import SCREENSTAR_SMALL_REGULAR
 from city import City
-from commute import Commute
+# from commute import Commute
 from content import ContentError
 from content import ImageContent
 from everyone import Everyone
@@ -70,9 +70,9 @@ class Schedule(ImageContent):
         self._sun = Sun(geocoder)
         self._artwork = Artwork()
         self._city = City(geocoder)
-        self._commute = Commute(geocoder)
+        # self._commute = Commute(geocoder)
         self._calendar = GoogleCalendar(geocoder)
-        self._everyone = Everyone(geocoder)
+        # self._everyone = Everyone(geocoder)
         self._wittgenstein = Wittgenstein()
 
     def _next(self, cron, after, user):
@@ -95,12 +95,12 @@ class Schedule(ImageContent):
             content = self._artwork
         elif kind == 'city':
             content = self._city
-        elif kind == 'commute':
-            content = self._commute
+        # elif kind == 'commute':
+        #     content = self._commute
         elif kind == 'calendar':
             content = self._calendar
-        elif kind == 'everyone':
-            content = self._everyone
+        # elif kind == 'everyone':
+        #     content = self._everyone
         elif kind == 'wittgenstein':
             content = self._wittgenstein
         else:
@@ -118,27 +118,34 @@ class Schedule(ImageContent):
         except DataError as e:
             raise ContentError(e)
         today = time.replace(hour=0, minute=0, second=0, microsecond=0)
-        while True:
-            entries = [(self._next(entry['start'], today, user), entry)
-                       for entry in user.get('schedule')]
-            if not entries:
-                raise ContentError('Empty schedule')
-            past_entries = list(filter(lambda x: x[0] <= time, entries))
+        # while True:
+        #     entries = [(self._next(entry['start'], today, user), entry)
+        #                for entry in user.get('schedule')]
+        #     if not entries:
+        #         raise ContentError('Empty schedule')
+        #     past_entries = list(filter(lambda x: x[0] <= time, entries))
 
-            # Use the most recent past entry.
-            if past_entries:
-                latest_datetime, latest_entry = max(past_entries,
-                                                    key=lambda x: x[0])
-                break
+        #     # Use the most recent past entry.
+        #     if past_entries:
+        #         latest_datetime, latest_entry = max(past_entries,
+        #                                             key=lambda x: x[0])
+        #         break
 
-            # If there were no past entries, try the previous day.
-            today -= timedelta(days=1)
+        #     # If there were no past entries, try the previous day.
+        #     today -= timedelta(days=1)
+
+        # Always show the city for now.
+        latest_entry = {
+            'name': 'City',
+            'start': '* * * *',
+            'image': 'city'
+        }
 
         # Generate the image from the current schedule entry.
-        info('Using image from schedule entry: %s (%s, %s)' % (
-             latest_entry['name'],
-             latest_entry['start'],
-             latest_datetime.strftime('%A %B %d %Y %H:%M:%S %Z')))
+        # info('Using image from schedule entry: %s (%s, %s)' % (
+        #      latest_entry['name'],
+        #      latest_entry['start'],
+        #      latest_datetime.strftime('%A %B %d %Y %H:%M:%S %Z')))
         image = self._image(latest_entry['image'], user, width, height,
                             variant)
 

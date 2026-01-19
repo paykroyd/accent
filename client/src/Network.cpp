@@ -129,7 +129,7 @@ bool Network::HttpGet(HTTPClient* http, const String& base_url,
   }
 
   Serial.printf("Requesting URL: %s\n", url.c_str());
-  if (!http->begin(url, kRootCertificate)) {
+  if (!http->begin(url/*, kRootCertificate*/)) {
     Serial.printf("Failed to connect to server: %s\n", url.c_str());
     return false;
   }

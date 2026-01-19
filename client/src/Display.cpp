@@ -35,6 +35,11 @@ void Display::Initialize() {
     gx_epd_->init(115200);
     gx_epd_->setFullWindow();
     gx_epd_->firstPage();
+      do {
+        gx_epd_->fillScreen(GxEPD_WHITE);
+    } while (gx_epd_->nextPage());
+    gx_epd_->setFullWindow();
+    gx_epd_->firstPage();
 }
 
 void Display::Load(const uint8_t* image_data, uint32_t size, uint32_t offset) {

@@ -1,3 +1,4 @@
+from functools import wraps
 from flask import Flask
 from flask import redirect
 from flask import render_template
@@ -13,10 +14,10 @@ from auth import ACCOUNT_ACCESS_URL
 from auth import google_calendar_step1
 from auth import next_retry_response
 from auth import oauth_step2
-from auth import user_auth
+# from auth import user_auth
 from auth import validate_key
 from city import City
-from commute import Commute
+# from commute import   
 from content import ContentError
 from epd import DEFAULT_DISPLAY_VARIANT
 from everyone import Everyone
@@ -56,13 +57,31 @@ geocoder = Geocoder()
 artwork = Artwork()
 calendar = GoogleCalendar(geocoder)
 city = City(geocoder)
-commute = Commute(geocoder)
-everyone = Everyone(geocoder)
+# commute = Commute(geocoder)
+# everyone = Everyone(geocoder)
 schedule = Schedule(geocoder)
 wittgenstein = Wittgenstein()
 
 # The Flask app handling requests.
 app = Flask(__name__)
+
+def user_auth(image_response=None, bad_response=None):
+    """Fake user_auth decorator that provides the same user."""
+
+    def decorator(func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            user = {'home': 'Cambridge, MA'}
+
+            # Inject the key and user into the function arguments.
+            kwargs['key'] = 'key'
+            kwargs['user'] = user
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @app.route('/artwork')
@@ -115,7 +134,7 @@ def everyone_gif(key=None, user=None):
 
 
 @app.route('/wittgenstein')
-@user_auth(image_response=gif_response)
+# @user_auth(image_response=gif_response)
 def wittgenstein_gif(key=None, user=None):
     """Responds with a GIF version of the wittgenstein image."""
 
@@ -138,7 +157,6 @@ def gif(key=None, user=None):
 @user_auth(image_response=epd_response)
 def epd(key=None, user=None):
     """Responds with an e-paper display version of the scheduled image."""
-
     width, height, variant = display_metadata(request)
     return content_response(schedule, epd_response, user, width, height,
                             variant)
@@ -150,7 +168,8 @@ def next(key=None, user=None):
     """Responds with the milliseconds until the next image."""
 
     try:
-        milliseconds = schedule.delay(user)
+        #milliseconds = schedule.delay(user)
+        milliseconds = 1000 * 60 * 60 # 1 hour
         return text_response(str(milliseconds))
     except ContentError as e:
         exception('Failed to create next content: %s' % e)
@@ -246,7 +265,7 @@ def _empty_timeline_response():
 
 
 @app.route('/timeline')
-@user_auth(bad_response=_empty_timeline_response)
+# @user_auth(bad_response=_empty_timeline_response)
 def timeline(key=None, user=None):
     """Responds with a schedule timeline image for the user."""
 
@@ -288,4 +307,4 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
