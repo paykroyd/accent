@@ -3,3 +3,14 @@
 
 # macOS
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Server database
+server/accent.db
+
+# IDE
+.idea/

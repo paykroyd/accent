@@ -3,7 +3,7 @@ from datetime import datetime
 from pytz import timezone
 from pytz import utc
 
-from firestore import DataError
+from database import DataError
 
 
 class LocalTime(object):

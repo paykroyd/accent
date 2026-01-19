@@ -1,0 +1,23 @@
+user:
+  home: "Cambridge, MA"
+
+schedule:
+  - name: "Morning Weather"
+    start: "0 6 * * *"
+    image: "city"
+  - name: "Midday Transit"
+    start: "0 12 * * *"
+    image: "mbta"
+  - name: "Evening Match"
+    start: "0 18 * * *"
+    image: "arsenal"
+  - name: "Night Calendar"
+    start: "0 21 * * *"
+    image: "calendar"
+
+content:
+  mbta:
+    route_id: "Red"
+    stop_id: "place-harsq"
+  arsenal:
+    team_id: 57

@@ -13,8 +13,8 @@ from oauth2client.client import HttpAccessTokenRefreshError
 from PIL import Image
 from PIL.ImageDraw import Draw
 
-from firestore import DataError
-from firestore import GoogleCalendarStorage
+from database import DataError
+from database import GoogleCalendarStorage
 from graphics import draw_text
 from graphics import SUBVARIO_CONDENSED_MEDIUM
 from content import ContentError
@@ -83,7 +83,8 @@ class GoogleCalendar(ImageContent):
         """Retrieves a daily count of events using the Google Calendar API."""
 
         # Create an authorized connection to the API.
-        storage = GoogleCalendarStorage(user.id)
+        # For single-user setup, use 'default' as the key
+        storage = GoogleCalendarStorage('default')
         credentials = storage.get()
         if not credentials:
             error('No valid Google Calendar credentials.')

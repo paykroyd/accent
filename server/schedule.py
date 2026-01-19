@@ -7,19 +7,19 @@ from logging import info
 from PIL import Image
 from PIL.ImageDraw import Draw
 
+from arsenal import Arsenal
 from artwork import Artwork
+from city import City
+from config import get_schedule
+from content import ContentError
+from content import ImageContent
+from database import DataError
 from google_calendar import GoogleCalendar
 from graphics import draw_text
 from graphics import SCREENSTAR_SMALL_REGULAR
-from city import City
-# from commute import Commute
-from content import ContentError
-from content import ImageContent
-from everyone import Everyone
-from firestore import DataError
 from local_time import LocalTime
+from mbta import MBTA
 from sun import Sun
-from wittgenstein import Wittgenstein
 
 # The client sleep duration may be early by a few minutes, so we add a buffer
 # to avoid waking up twice in a row.
@@ -51,7 +51,7 @@ TIMELINE_LINE_DASH = 2
 
 
 class Schedule(ImageContent):
-    """A database-backed schedule determining which images to show at request
+    """A config-backed schedule determining which images to show at request
     time and when to wake up from sleep for the next request.
 
     The schedule is a list of maps, each containing:
@@ -61,8 +61,7 @@ class Schedule(ImageContent):
              expression syntax additionally supports the keywords 'sunrise' and
              'sunset' instead of hours and minutes, e.g. 'sunrise * * *'.
     'image': The kind of image to show when this entry is active. Valid kinds
-             are 'artwork', 'city', 'commute', 'calendar', 'everyone', and
-             'wittgenstein'.
+             are 'artwork', 'city', 'calendar', 'mbta', and 'arsenal'.
     """
 
     def __init__(self, geocoder):
@@ -70,10 +69,9 @@ class Schedule(ImageContent):
         self._sun = Sun(geocoder)
         self._artwork = Artwork()
         self._city = City(geocoder)
-        # self._commute = Commute(geocoder)
         self._calendar = GoogleCalendar(geocoder)
-        # self._everyone = Everyone(geocoder)
-        self._wittgenstein = Wittgenstein()
+        self._mbta = MBTA()
+        self._arsenal = Arsenal()
 
     def _next(self, cron, after, user):
         """Finds the next time matching the cron expression."""
@@ -95,14 +93,12 @@ class Schedule(ImageContent):
             content = self._artwork
         elif kind == 'city':
             content = self._city
-        # elif kind == 'commute':
-        #     content = self._commute
         elif kind == 'calendar':
             content = self._calendar
-        # elif kind == 'everyone':
-        #     content = self._everyone
-        elif kind == 'wittgenstein':
-            content = self._wittgenstein
+        elif kind == 'mbta':
+            content = self._mbta
+        elif kind == 'arsenal':
+            content = self._arsenal
         else:
             error('Unknown image kind: %s' % kind)
             return None
@@ -117,35 +113,38 @@ class Schedule(ImageContent):
             time = self._local_time.now(user)
         except DataError as e:
             raise ContentError(e)
-        today = time.replace(hour=0, minute=0, second=0, microsecond=0)
-        # while True:
-        #     entries = [(self._next(entry['start'], today, user), entry)
-        #                for entry in user.get('schedule')]
-        #     if not entries:
-        #         raise ContentError('Empty schedule')
-        #     past_entries = list(filter(lambda x: x[0] <= time, entries))
 
-        #     # Use the most recent past entry.
-        #     if past_entries:
-        #         latest_datetime, latest_entry = max(past_entries,
-        #                                             key=lambda x: x[0])
-        #         break
+        # Get schedule from config
+        schedule_entries = get_schedule()
 
-        #     # If there were no past entries, try the previous day.
-        #     today -= timedelta(days=1)
+        # Default to city if no schedule configured
+        if not schedule_entries:
+            latest_entry = {
+                'name': 'City',
+                'start': '0 0 * * *',
+                'image': 'city'
+            }
+        else:
+            today = time.replace(hour=0, minute=0, second=0, microsecond=0)
+            while True:
+                entries = [(self._next(entry['start'], today, user), entry)
+                           for entry in schedule_entries]
+                past_entries = list(filter(lambda x: x[0] <= time, entries))
 
-        # Always show the city for now.
-        latest_entry = {
-            'name': 'City',
-            'start': '* * * *',
-            'image': 'city'
-        }
+                # Use the most recent past entry.
+                if past_entries:
+                    latest_datetime, latest_entry = max(past_entries,
+                                                        key=lambda x: x[0])
+                    info('Using image from schedule entry: %s (%s, %s)' % (
+                         latest_entry['name'],
+                         latest_entry['start'],
+                         latest_datetime.strftime('%A %B %d %Y %H:%M:%S %Z')))
+                    break
+
+                # If there were no past entries, try the previous day.
+                today -= timedelta(days=1)
 
         # Generate the image from the current schedule entry.
-        # info('Using image from schedule entry: %s (%s, %s)' % (
-        #      latest_entry['name'],
-        #      latest_entry['start'],
-        #      latest_datetime.strftime('%A %B %d %Y %H:%M:%S %Z')))
         image = self._image(latest_entry['image'], user, width, height,
                             variant)
 
@@ -159,10 +158,15 @@ class Schedule(ImageContent):
             time = self._local_time.now(user)
         except DataError as e:
             raise ContentError(e)
+
+        # Get schedule from config
+        schedule_entries = get_schedule()
+        if not schedule_entries:
+            # Default to 1 hour if no schedule configured
+            return 60 * 60 * 1000
+
         entries = [(self._next(entry['start'], time, user), entry)
-                   for entry in user.get('schedule')]
-        if not entries:
-            raise ContentError('Empty schedule')
+                   for entry in schedule_entries]
         next_datetime, next_entry = min(entries, key=lambda x: x[0])
 
         # Calculate the delay in milliseconds.
@@ -243,7 +247,7 @@ class Schedule(ImageContent):
                       fill=TIMELINE_HIGHLIGHT, width=TIMELINE_LINE_WIDTH)
 
         # Generate the schedule throughout the week.
-        entries = user.get('schedule')
+        entries = get_schedule()
         if not entries:
             # Empty timeline.
             return image

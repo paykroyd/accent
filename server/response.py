@@ -98,7 +98,8 @@ def content_response(content, image_response, user, width, height, variant):
     except ContentError as e:
         exception('Failed to create %s content: %s' % (
             content.__class__.__name__, e))
-        return settings_response(user.id, image_response, width, height,
+        # For single-user setup, use 'default' as the key
+        return settings_response('default', image_response, width, height,
                                  variant)
 
 

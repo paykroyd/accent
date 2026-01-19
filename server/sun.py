@@ -5,7 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 from logging import info
 
-from firestore import DataError
+from database import DataError
 from geocoder import GeocoderWrapper
 from local_time import LocalTime
 

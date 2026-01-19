@@ -4,8 +4,8 @@ from random import random
 
 from content import ContentError
 from content import ImageContent
+from database import DataError
 from epd import adjust_xy
-from firestore import DataError
 from local_time import LocalTime
 from sun import Sun
 from weather import Weather
